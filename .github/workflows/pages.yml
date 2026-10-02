@@ -17,24 +17,52 @@ jobs:
       - name: Baixar repositório
         uses: actions/checkout@v4
 
-      - name: Extrair catálogo V14
+      - name: Preparar V15
         run: |
+          set -e
+
           rm -rf site temp
-          mkdir site temp
+          mkdir -p site temp
 
-          unzip -q LITORAL_OKE_V14_VISUAL_RESERVAS.zip -d temp
+          echo "Extraindo LITORAL_OKE_V15_VISUAL_RESERVAS.zip..."
 
-          ROOT=$(dirname "$(find temp -type f -name index.html -print -quit)")
+          unzip -q LITORAL_OKE_V15_VISUAL_RESERVAS.zip -d temp
 
-          if [ -z "$ROOT" ] || [ "$ROOT" = "." ]; then
-            echo "ERRO: index.html não encontrado dentro do ZIP."
+          echo "Procurando index.html..."
+
+          INDEX=$(find temp -type f -name "index.html" -print -quit)
+
+          if [ -z "$INDEX" ]; then
+            echo "ERRO: index.html não encontrado dentro da V15."
             exit 1
           fi
 
+          ROOT=$(dirname "$INDEX")
+
+          echo "Pasta encontrada:"
+          echo "$ROOT"
+
           cp -a "$ROOT"/. site/
+
+          echo "Arquivos publicados:"
+          find site -maxdepth 2 -type f | head -100
+
+      - name: Verificar site
+        run: |
+          set -e
+
+          if [ ! -f "site/index.html" ]; then
+            echo "ERRO: site/index.html não foi encontrado."
+            exit 1
+          fi
+
+          echo "OK: index.html encontrado."
+          echo "V15 pronta para publicação."
 
       - name: Publicar no GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
+          publish_branch: gh-pages
+          force_orphan: true
