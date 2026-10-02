@@ -17,12 +17,21 @@ jobs:
       - name: Baixar repositório
         uses: actions/checkout@v4
 
-      - name: Extrair catálogo
+      - name: Extrair catálogo V14
         run: |
-          rm -rf site
-          mkdir site
-          unzip -q LITORAL_OKE_CATALOGO_TESTE_v2.zip -d temp
-          cp -r temp/Cliente_LITORAL_OK#U00ca/. site/
+          rm -rf site temp
+          mkdir site temp
+
+          unzip -q LITORAL_OKE_V14_VISUAL_RESERVAS.zip -d temp
+
+          ROOT=$(dirname "$(find temp -type f -name index.html -print -quit)")
+
+          if [ -z "$ROOT" ] || [ "$ROOT" = "." ]; then
+            echo "ERRO: index.html não encontrado dentro do ZIP."
+            exit 1
+          fi
+
+          cp -a "$ROOT"/. site/
 
       - name: Publicar no GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
