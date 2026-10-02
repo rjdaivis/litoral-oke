@@ -1,0 +1,31 @@
+name: Publicar Litoral-Okê
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Extrair catálogo
+        run: |
+          rm -rf site
+          mkdir site
+          unzip -q LITORAL_OKE_CATALOGO_TESTE_v2.zip -d temp
+          cp -r temp/Cliente_LITORAL_OK#U00ca/. site/
+
+      - name: Publicar no GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
