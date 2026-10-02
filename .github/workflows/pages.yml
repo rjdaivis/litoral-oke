@@ -24,40 +24,58 @@ jobs:
           rm -rf site temp
           mkdir -p site temp
 
-          echo "Extraindo LITORAL_OKE_V15_VISUAL_RESERVAS.zip..."
-
           unzip -q LITORAL_OKE_V15_VISUAL_RESERVAS.zip -d temp
-
-          echo "Procurando index.html..."
 
           INDEX=$(find temp -type f -name "index.html" -print -quit)
 
           if [ -z "$INDEX" ]; then
-            echo "ERRO: index.html não encontrado dentro da V15."
+            echo "ERRO: index.html não encontrado."
             exit 1
           fi
 
           ROOT=$(dirname "$INDEX")
 
-          echo "Pasta encontrada:"
-          echo "$ROOT"
+          echo "V15 encontrada em: $ROOT"
 
-          cp -a "$ROOT"/. site/
+          # Publica a V15 em uma pasta NOVA, sem o cache da versão antiga
+          mkdir -p site/v15
+          cp -a "$ROOT"/. site/v15/
 
-          echo "Arquivos publicados:"
+          # Cria uma página inicial que encaminha para a V15
+          cat > site/index.html <<'EOF'
+          <!doctype html>
+          <html lang="pt-BR">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+            <meta http-equiv="Pragma" content="no-cache">
+            <meta http-equiv="Expires" content="0">
+            <title>LITORAL-OKÊ</title>
+            <meta http-equiv="refresh" content="0;url=./v15/">
+          </head>
+          <body>
+            <script>
+              location.replace('./v15/?v=15');
+            </script>
+            Abrindo LITORAL-OKÊ...
+          </body>
+          </html>
+          EOF
+
+          echo "Conteúdo publicado:"
           find site -maxdepth 2 -type f | head -100
 
-      - name: Verificar site
+      - name: Verificar V15
         run: |
           set -e
 
-          if [ ! -f "site/index.html" ]; then
-            echo "ERRO: site/index.html não foi encontrado."
-            exit 1
-          fi
+          test -f site/index.html
+          test -f site/v15/index.html
+          test -f site/v15/assets/litoral-oke-v15.js
+          test -f site/v15/assets/litoral-oke-v15.css
 
-          echo "OK: index.html encontrado."
-          echo "V15 pronta para publicação."
+          echo "V15 verificada com sucesso."
 
       - name: Publicar no GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
